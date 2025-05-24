@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Your Devices</h2>
+    
+    {% if not devices %}
+        <div class="alert alert-info">No devices registered yet. <a href="{{ url_for('add_device') }}">Add your first device</a></div>
+    {% else %}
+        <div class="row">
+            {% for device in devices %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Device: {{ device.device_id }}</h5>
+                            <p class="card-text">
+                                Button State: 
+                                <span class="badge bg-{{ 'success' if device.button_state else 'secondary' }}">
+                                    {{ 'Pressed' if device.button_state else 'Not Pressed' }}
+                                </span>
+                            </p>
+                            <p class="card-text">
+                                LED State: 
+                                <span class="badge bg-{{ 'warning' if device.led_state else 'secondary' }}">
+                                    {{ 'ON' if device.led_state else 'OFF' }}
+                                </span>
+                            </p>
+                            <a href="{{ url_for('toggle_led', device_id=device.device_id) }}" 
+                               class="btn btn-{{ 'warning' if device.led_state else 'secondary' }}">
+                                Turn {{ 'OFF' if device.led_state else 'ON' }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
