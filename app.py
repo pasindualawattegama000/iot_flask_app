@@ -14,26 +14,36 @@ def register():
         username = request.form['username']
         password = request.form['password']
         
-        # Check if username exists
-        user = execute_query(
-            "SELECT * FROM users WHERE username = %s", 
-            (username,), 
-            fetch_one=True
-        )
-        
-        if user:
-            flash('Username already exists', 'danger')
+        try:
+            # Check if username exists
+            user = execute_query(
+                "SELECT * FROM users WHERE username = %s", 
+                (username,), 
+                fetch_one=True
+            )
+            
+            if user:
+                flash('Username already exists', 'danger')
+                return redirect(url_for('register'))
+            
+            # Hash password and create user
+            password_hash = generate_password_hash(password)
+            result = execute_query(
+                "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+                (username, password_hash)
+            )
+            
+            if result is None:
+                flash('Error creating user. Please try again.', 'danger')
+                return redirect(url_for('register'))
+            
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            print(f"Registration error: {str(e)}")
+            flash('An error occurred during registration. Please try again.', 'danger')
             return redirect(url_for('register'))
-        
-        # Hash password and create user
-        password_hash = generate_password_hash(password)
-        execute_query(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-            (username, password_hash)
-        )
-        
-        flash('Registration successful! Please login.', 'success')
-        return redirect(url_for('login'))
     
     return render_template('register.html')
 
@@ -216,6 +226,16 @@ def get_led_state():
         return jsonify({'led_state': 'on' if led_state['led_state'] else 'off'})
     else:
         return jsonify({'led_state': 'off'})
+
+@app.route('/test_db')
+def test_db():
+    try:
+        result = execute_query("SELECT 1")
+        if result is not None:
+            return "Database connection successful!"
+        return "Database connection failed!"
+    except Exception as e:
+        return f"Database error: {str(e)}"
 
 if __name__ == '__main__':
     app.run(debug=True)
